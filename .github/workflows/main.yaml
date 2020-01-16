@@ -12,11 +12,10 @@ jobs:
       GOPATH: "${HOME}"
       osbuilder_url: "https://github.com/kata-containers/osbuilder.git"
     steps:
-      - name: install-golang
-      - uses: actions/setup-go@v1
+      - name: Setup go
+        uses: actions/setup-go@v1
         with:
-          go-version: '1.12.3' # The Go version to download (if necessary) and use.
-      - name: build-image 
+          go-version: '1.12.3'
       - run: |   
           git clone "$osbuilder_url" "osbuilder"
           go get github.com/kata-containers/agent
