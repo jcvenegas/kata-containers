@@ -15,13 +15,15 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: '1.12.3'
-      - run: |
+      - name: build
+        run: |
+          set -x
           echo "GOPATH=$GOPATH"
           export GOPATH=$HOME
           echo "GOPATH=$GOPATH"
           git clone "$osbuilder_url" "osbuilder"
           go get github.com/kata-containers/agent
-          push ${GOPATH}/src/github.com/kata-containers/agent
+          pushd ${GOPATH}/src/github.com/kata-containers/agent
           git fetch origin pull/706/head:PR
           git checkout PR
           popd
