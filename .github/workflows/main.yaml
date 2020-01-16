@@ -9,27 +9,44 @@ jobs:
   build-image:
     runs-on: ubuntu-18.04
     env:
-      osbuilder_url: "https://github.com/kata-containers/osbuilder.git"
+      osbuilder_repo: "github.com/kata-containers/osbuilder"
+      agent_go_repo: "github.com/kata-containers/agent"
+      agent_version: "pull/706/head"
     steps:
       - name: Setup go
         uses: actions/setup-go@v1
         with:
           go-version: '1.12.3'
-      - name: build
+      - name: Set GOPATH
         run: |
-          set -x
-          echo "GOPATH=$GOPATH"
-          export GOPATH=$HOME/go
-          export PATH=$GOPATH/bin:$PATH
-          echo "GOPATH=$GOPATH"
+          echo "##[set-env name=GOPATH;]$(dirname $GITHUB_WORKSPACE)"
+          echo "##[add-path]$(dirname $GITHUB_WORKSPACE)/bin"
           mkdir -p $GOPATH/bin
+      - name: Install yq
+        run: |
           curl -o $GOPATH/bin/yq -LSsf https://github.com/mikefarah/yq/releases/download/2.3.0/yq_linux_amd64
           chmod +x $GOPATH/bin/yq
-          git clone "$osbuilder_url" "osbuilder"
-          go get github.com/kata-containers/agent
-          pushd ${GOPATH}/src/github.com/kata-containers/agent
-          git fetch origin pull/706/head:PR
-          git checkout PR
+      - name: install hub
+        run: |
+          HUB_VER=$(curl -s "https://api.github.com/repos/github/hub/releases/latest" | jq -r .tag_name | sed 's/^v//')
+          wget -q -O- https://github.com/github/hub/releases/download/v$HUB_VER/hub-linux-amd64-$HUB_VER.tgz | \
+          tar xz --strip-components=2 --wildcards '*/bin/hub' && sudo mv hub /usr/local/bin/hub
+      - name: checkout to agent version
+        run: |
+          go get "${agent_repo}"
+          pushd "${GOPATH}/src/${agent_repo}"
+          git fetch origin :TARGET
+          git checkout TARGET
           popd
-          cd osbuilder
-          sudo -E PATH="${PATH}" make image DISTRO="clearlinux" DEBUG="1" USE_DOCKER="1" IMG_OS_VERSION="${img_os_version}" ROOTFS_BUILD_DEST="${tmp_dir}/rootfs-image" GO_VERSION=1.12.3
+      - name: checkout to agent version
+        run: |
+          go get "${osbuilder_repo}"
+          pushd "${GOPATH}/src/${osbuilder_repo}"
+          sudo -E PATH="${PATH}" make image DISTRO="clearlinux" DEBUG="1" USE_DOCKER="1" ROOTFS_BUILD_DEST="/tmp/rootfs-image" GO_VERSION=1.12.3
+          popd
+      - name: push image to github
+        run: |
+          pushd "${GOPATH}/src/${agent_repo}"
+          agent_version=$(./kata-agent --version | awk '{print $3}')
+          popd
+          tag=$(echo $GITHUB_REF | cut -d/ -f3-)
