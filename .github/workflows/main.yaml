@@ -28,4 +28,4 @@ jobs:
           git checkout PR
           popd
           cd osbuilder
-          sudo -E PATH="${PATH}" make image DISTRO="clearlinux" DEBUG="1" USE_DOCKER="1" AGENT_VERSION="PR" IMG_OS_VERSION="${img_os_version}" ROOTFS_BUILD_DEST="${tmp_dir}/rootfs-image" GO_VERSION=1.12.3
+          sudo -E PATH="${PATH}" make image DISTRO="clearlinux" DEBUG="1" USE_DOCKER="1" IMG_OS_VERSION="${img_os_version}" ROOTFS_BUILD_DEST="${tmp_dir}/rootfs-image" GO_VERSION=1.12.3
