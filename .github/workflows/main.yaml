@@ -1,16 +1,28 @@
 name: build image
 on: 
-  push: 
-    tags:
-     - '*'
+  push:
+    branches:
+      - master
 
 jobs:
   # Job for building the image
   build-image:
     runs-on: ubuntu-18.04
+    env:
+      GOPATH: "${HOME}"
+      osbuilder_url: "https://github.com/kata-containers/osbuilder.git"
     steps:
-      - name: build-image
-        run: |
-         git clone https://github.com/kata-containers/packaging.git
-         cd packaging
-         ./obs-packaging/kata-containers-image/build_image.sh
+      - name: install-golang
+      - uses: actions/setup-go@v1
+        with:
+          go-version: '1.9.3' # The Go version to download (if necessary) and use.
+      - name: build-image 
+        run: |   
+          git clone "$osbuilder_url" "osbuilder"
+          go get github.com/kata-containers/agent
+          push ${GOPATH}/src/github.com/kata-containers/agent
+          git fetch origin pull/706/head:PR
+          git checkout PR
+          popd
+          cd osbuilder
+          sudo -E PATH="${PATH}" make image DISTRO="clearlinux" DEBUG="${DEBUG:-}" USE_DOCKER="1" AGENT_VERSION="${agent_version}" IMG_OS_VERSION="${img_os_version}" ROOTFS_BUILD_DEST="${tmp_dir}/rootfs-image"
