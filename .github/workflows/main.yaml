@@ -21,9 +21,10 @@ jobs:
         run: |
           echo "##[set-env name=GOPATH;]$(dirname $GITHUB_WORKSPACE)"
           echo "##[add-path]$(dirname $GITHUB_WORKSPACE)/bin"
-          mkdir -p $GOPATH/bin
+          mkdir -p "${GOPATH}/bin"
       - name: Install yq
         run: |
+          echo "gopath: ${GOPATH}"
           curl -o $GOPATH/bin/yq -LSsf https://github.com/mikefarah/yq/releases/download/2.3.0/yq_linux_amd64
           chmod +x $GOPATH/bin/yq
       - name: install hub
