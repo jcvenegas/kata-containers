@@ -19,7 +19,8 @@ jobs:
         run: |
           set -x
           echo "GOPATH=$GOPATH"
-          export GOPATH=$HOME
+          export GOPATH=$HOME/go
+          export PATH=$GOPATH/bin:$PATH
           echo "GOPATH=$GOPATH"
           git clone "$osbuilder_url" "osbuilder"
           go get github.com/kata-containers/agent
