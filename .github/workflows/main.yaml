@@ -22,6 +22,8 @@ jobs:
           export GOPATH=$HOME/go
           export PATH=$GOPATH/bin:$PATH
           echo "GOPATH=$GOPATH"
+          mkdir -p $GOPATH/bin
+          curl -o /home/runner/go/bin/yq -LSsf https://github.com/mikefarah/yq/releases/download/2.3.0/yq_linux_amd64
           git clone "$osbuilder_url" "osbuilder"
           go get github.com/kata-containers/agent
           pushd ${GOPATH}/src/github.com/kata-containers/agent
