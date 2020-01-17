@@ -19,6 +19,7 @@ jobs:
           go-version: '1.12.3'
       - name: Set GOPATH
         run: |
+          pwd
           export GOPATH="${HOME}/go"
           echo "##[set-env name=GOPATH;]${GOPATH}"
           echo "##[add-path]${GOPATH}/bin"
@@ -51,4 +52,7 @@ jobs:
         run: |
           set -x
           agent_version=$("${GOPATH}/src/${agent_repo}/kata-agent" --version | awk '{print $3}')
-          tag=$(echo $GITHUB_REF | cut -d/ -f3-)
+          kata_image_path="/image/kata-agent-${agent_version}.img"
+          mv /image/kata-containers.img "${kata_image_path}"
+          pwd
+          GITHUB_TOKEN=${{ secrets.GIT_UPLOAD_TOKEN }} hub release edit  -a "${kata_image_path}" "prueba"
