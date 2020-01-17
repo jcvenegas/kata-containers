@@ -40,17 +40,15 @@ jobs:
           git fetch origin :TARGET
           git checkout TARGET
           popd
-      - name: checkout to agent version
+      - name: build image
         run: |
           set -x
-          go get "${osbuilder_repo}"
+          go get "${osbuilder_repo}" || true
           pushd "${GOPATH}/src/${osbuilder_repo}"
           sudo -E PATH="${PATH}" make image DISTRO="clearlinux" DEBUG="1" USE_DOCKER="1" ROOTFS_BUILD_DEST="/tmp/rootfs-image" GO_VERSION=1.12.3
           popd
       - name: push image to github
         run: |
           set -x
-          pushd "${GOPATH}/src/${agent_repo}"
-          agent_version=$(./kata-agent --version | awk '{print $3}')
-          popd
+          agent_version=$("${GOPATH}/src/${agent_repo}/kata-agent" --version | awk '{print $3}')
           tag=$(echo $GITHUB_REF | cut -d/ -f3-)
