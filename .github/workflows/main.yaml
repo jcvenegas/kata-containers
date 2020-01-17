@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-18.04
     env:
       osbuilder_repo: "github.com/kata-containers/osbuilder"
-      agent_pr: "github.com/kata-containers/agent"
-      agent_version: "pull/706/head"
+      agent_repo: "github.com/kata-containers/agent"
+      agent_pr: "pull/706/head"
     steps:
       - name: checkout
         uses: actions/checkout@v2
