@@ -19,7 +19,6 @@ jobs:
           go-version: '1.12.3'
       - name: Set GOPATH
         run: |
-          pwd
           export GOPATH="${HOME}/go"
           echo "##[set-env name=GOPATH;]${GOPATH}"
           echo "##[add-path]${GOPATH}/bin"
@@ -35,7 +34,6 @@ jobs:
           tar xz --strip-components=2 --wildcards '*/bin/hub' && sudo mv hub /usr/local/bin/hub
       - name: checkout to agent version
         run: |
-          set -x
           go get "${agent_repo}" || true
           pushd "${GOPATH}/src/${agent_repo}"
           git fetch origin :TARGET
@@ -43,7 +41,6 @@ jobs:
           popd
       - name: build image
         run: |
-          set -x
           go get "${osbuilder_repo}" || true
           pushd "${GOPATH}/src/${osbuilder_repo}"
           sudo -E PATH="${PATH}" make image DISTRO="clearlinux" DEBUG="1" USE_DOCKER="1" ROOTFS_BUILD_DEST="/tmp/rootfs-image" GO_VERSION=1.12.3
@@ -52,7 +49,7 @@ jobs:
         run: |
           set -x
           agent_version=$("${GOPATH}/src/${agent_repo}/kata-agent" --version | awk '{print $3}')
-          kata_image_path="/image/kata-agent-${agent_version}.img"
-          mv /image/kata-containers.img "${kata_image_path}"
+          kata_image_path="${PWD}/kata-agent-${agent_version}.img"
+          mv "${GOPATH}/src/${osbuilder_repo}/kata-containers.img" "${kata_image_path}"
           pwd
           GITHUB_TOKEN=${{ secrets.GIT_UPLOAD_TOKEN }} hub release edit  -a "${kata_image_path}" "prueba"
