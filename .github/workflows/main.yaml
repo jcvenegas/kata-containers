@@ -25,6 +25,8 @@ jobs:
       - name: Install yq
         run: |
           echo "gopath: ${GOPATH}"
+          ls $GOPATH/bin/ || true
+          ls $GOPATH/bin/* || true
           curl -o $GOPATH/bin/yq -LSsf https://github.com/mikefarah/yq/releases/download/2.3.0/yq_linux_amd64
           chmod +x $GOPATH/bin/yq
       - name: install hub
