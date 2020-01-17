@@ -13,12 +13,16 @@ jobs:
       agent_repo: "github.com/kata-containers/agent"
       agent_version: "pull/706/head"
     steps:
+      - name: checkout
+        uses: actions/checkout@v2
       - name: Setup go
         uses: actions/setup-go@v1
         with:
           go-version: '1.12.3'
       - name: Set GOPATH
         run: |
+          ls -la *
+          false
           export GOPATH="${HOME}/go"
           echo "##[set-env name=GOPATH;]${GOPATH}"
           echo "##[add-path]${GOPATH}/bin"
