@@ -19,16 +19,14 @@ jobs:
           go-version: '1.12.3'
       - name: Set GOPATH
         run: |
-          echo "##[set-env name=GOPATH;]$(dirname $GITHUB_WORKSPACE)"
+          export GOPATH="${GITHUB_WORKSPACE}/go"
+          echo "##[set-env name=GOPATH;]$(dirname $GOPATH)"
           echo "##[add-path]$(dirname $GITHUB_WORKSPACE)/bin"
           mkdir -p "${GOPATH}/bin"
       - name: Install yq
         run: |
-          echo "gopath: ${GOPATH}"
-          ls $GOPATH/bin/ || true
-          ls $GOPATH/bin/* || true
-          curl -o $GOPATH/bin/yq -LSsf https://github.com/mikefarah/yq/releases/download/2.3.0/yq_linux_amd64
-          chmod +x $GOPATH/bin/yq
+          curl -o "${GOPATH}/bin/yq" -LSsf https://github.com/mikefarah/yq/releases/download/2.3.0/yq_linux_amd64
+          chmod +x "$GOPATH/bin/yq"
       - name: install hub
         run: |
           HUB_VER=$(curl -s "https://api.github.com/repos/github/hub/releases/latest" | jq -r .tag_name | sed 's/^v//')
@@ -49,6 +47,7 @@ jobs:
           popd
       - name: push image to github
         run: |
+          set -x
           pushd "${GOPATH}/src/${agent_repo}"
           agent_version=$(./kata-agent --version | awk '{print $3}')
           popd
