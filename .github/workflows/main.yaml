@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-18.04
     env:
       osbuilder_repo: "github.com/kata-containers/osbuilder"
-      agent_repo: "github.com/kata-containers/agent"
+      agent_pr: "github.com/kata-containers/agent"
       agent_version: "pull/706/head"
     steps:
       - name: checkout
@@ -38,7 +38,7 @@ jobs:
         run: |
           go get "${agent_repo}" || true
           pushd "${GOPATH}/src/${agent_repo}"
-          git fetch origin :TARGET
+          git fetch origin ${agent_pr}:TARGET
           git checkout TARGET
           popd
       - name: build image
