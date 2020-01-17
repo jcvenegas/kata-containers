@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-18.04
     env:
       osbuilder_repo: "github.com/kata-containers/osbuilder"
-      agent_go_repo: "github.com/kata-containers/agent"
+      agent_repo: "github.com/kata-containers/agent"
       agent_version: "pull/706/head"
     steps:
       - name: Setup go
