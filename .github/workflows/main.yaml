@@ -54,4 +54,4 @@ jobs:
           kata_image_path="${PWD}/kata-agent-${agent_version}.img"
           mv "${GOPATH}/src/${osbuilder_repo}/kata-containers.img" "${kata_image_path}"
           pwd
-          GITHUB_TOKEN=${{ secrets.GIT_UPLOAD_TOKEN }} hub release edit  -a "${kata_image_path}" "prueba"
+          GITHUB_TOKEN=${{ secrets.GIT_UPLOAD_TOKEN }} hub release edit -m "" -a "${kata_image_path}" "prueba"
