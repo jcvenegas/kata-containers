@@ -8,6 +8,8 @@ description="
 Description: This script is the *ONLY* to build a kernel for development.
 "
 
+set -x
+
 set -o errexit
 set -o nounset
 set -o pipefail
@@ -40,6 +42,7 @@ readonly default_config_whitelist="${script_dir}/configs/fragments/whitelist.con
 # GPU vendor
 readonly GV_INTEL="intel"
 readonly GV_NVIDIA="nvidia"
+readonly build_dir="${PWD}/build"
 
 #Path to kernel directory
 kernel_path=""
@@ -134,13 +137,14 @@ get_kernel() {
 		version=${version#v}
 
 		major_version=$(echo "${version}" | cut -d. -f1)
+		(cd $build_dir
 		kernel_tarball="linux-${version}.tar.xz"
 
-                if [ ! -f sha256sums.asc ] || ! grep -q "${kernel_tarball}" sha256sums.asc; then
-                        info "Download kernel checksum file: sha256sums.asc"
-                        curl --fail -OL "https://cdn.kernel.org/pub/linux/kernel/v${major_version}.x/sha256sums.asc"
-                fi
-                grep "${kernel_tarball}" sha256sums.asc >"${kernel_tarball}.sha256"
+		if [ ! -f sha256sums.asc ] || ! grep -q "${kernel_tarball}" sha256sums.asc; then
+			info "Download kernel checksum file: sha256sums.asc"
+			curl --fail -OL "https://cdn.kernel.org/pub/linux/kernel/v${major_version}.x/sha256sums.asc"
+		fi
+		grep "${kernel_tarball}" sha256sums.asc >"${kernel_tarball}.sha256"
 
 		if [ -f "${kernel_tarball}" ] && ! sha256sum -c "${kernel_tarball}.sha256"; then
 			info "invalid kernel tarball ${kernel_tarball} removing "
@@ -159,6 +163,7 @@ get_kernel() {
 		tar xf "${kernel_tarball}"
 
 		mv "linux-${version}" "${kernel_path}"
+	)
 	fi
 }
 
@@ -311,6 +316,8 @@ get_config_version() {
 setup_kernel() {
 	local kernel_path=${1:-}
 	[ -n "${kernel_path}" ] || die "kernel_path not provided"
+
+	mkdir -p "${build_dir}"
 
 	if [ -d "$kernel_path" ]; then
 		info "${kernel_path} already exist"
@@ -484,9 +491,9 @@ main() {
 	if [ -z "${kernel_path}" ]; then
 		config_version=$(get_config_version)
 		if [[ ${experimental_kernel} == "true" ]]; then
-			kernel_path="${PWD}/kata-linux-experimental-${kernel_version}-${config_version}"
+			kernel_path="${build_dir}/kata-linux-experimental-${kernel_version}-${config_version}"
 		else
-			kernel_path="${PWD}/kata-linux-${kernel_version}-${config_version}"
+			kernel_path="${build_dir}/kata-linux-${kernel_version}-${config_version}"
 		fi
 		info "Config version: ${config_version}"
 	fi
