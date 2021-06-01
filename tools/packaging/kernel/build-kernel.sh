@@ -350,7 +350,7 @@ setup_kernel() {
 	# Apply version specific patches for experimental build
 	if [ "${experimental_kernel}" == "true" ] ;then
 		info "Apply experimental patches"
-		${script_dir}/apply_patches.sh "${experimental_patches_dir}"
+		"${script_dir}/../scripts/apply_patches.sh" "${experimental_patches_dir}"
 	fi
 
 	[ -n "${hypervisor_target}" ] || hypervisor_target="kvm"
