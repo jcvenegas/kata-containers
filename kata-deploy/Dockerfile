@@ -20,7 +20,9 @@ RUN apt-get update
 RUN apt-get install docker-ce-cli -y
 
 ARG IMG_USER=kata-builder
-RUN adduser ${IMG_USER}
+ARG UID=1000
+ARG GID=1000
+RUN adduser ${IMG_USER} --uid=${UID}
 RUN sh -c "echo '${IMG_USER} ALL=NOPASSWD: ALL' >> /etc/sudoers"
 
 # kernel deps
@@ -28,5 +30,9 @@ RUN apt install -y flex bison libelf-dev bc iptables build-essential
 RUN apt install -y git
 
 
+# kata deps
+RUN apt install -y golang
+
+
 ENV USER ${IMG_USER}
-USER ${USER}
+USER ${UID}:${GID}
