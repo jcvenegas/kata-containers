@@ -345,7 +345,7 @@ setup_kernel() {
 	cd "${kernel_path}" || exit 1
 
 	# Apply version specific patches
-	${script_dir}/apply_patches.sh "${patches_dir_for_version}"
+	"${script_dir}/../scripts/apply_patches.sh" "${patches_dir_for_version}"
 
 	# Apply version specific patches for experimental build
 	if [ "${experimental_kernel}" == "true" ] ;then
