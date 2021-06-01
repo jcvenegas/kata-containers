@@ -18,12 +18,8 @@ kata_version="${kata_version:-}"
 
 #project_name
 readonly project_name="kata-containers"
-[ -n "${GOPATH:-}" ] || GOPATH="${HOME}/go"
-# Fetch the first element from GOPATH as working directory
-# as go get only works against the first item in the GOPATH
-GOPATH="${GOPATH%%:*}"
 # Kernel version to be used
-kernel_version=""
+kernel_version="${kernel_version:-}"
 # Flag know if need to download the kernel source
 download_kernel=false
 # The repository where kernel configuration lives
@@ -41,6 +37,9 @@ readonly default_config_whitelist="${script_dir}/configs/fragments/whitelist.con
 readonly GV_INTEL="intel"
 readonly GV_NVIDIA="nvidia"
 
+info(){ local msg="$*"; echo "INFO: $msg" >&2;}
+die(){ local msg="$*"; echo "FATAL: $msg" >&2; exit 1;}
+
 #Path to kernel directory
 kernel_path=""
 #Experimental kernel support. Pull from virtio-fs GitLab instead of kernel.org
@@ -49,7 +48,7 @@ experimental_kernel="false"
 force_setup_generate_config="false"
 #GPU kernel support
 gpu_vendor=""
-#Confidential guest type 
+#Confidential guest type
 conf_guest=""
 #
 patches_path=""
@@ -63,9 +62,6 @@ kernel_config_path=""
 DESTDIR="${DESTDIR:-/}"
 #PREFIX=
 PREFIX="${PREFIX:-/usr}"
-
-packaging_scripts_dir="${script_dir}/../scripts"
-source "${packaging_scripts_dir}/lib.sh"
 
 usage() {
 	exit_code="$1"
@@ -161,6 +157,7 @@ get_kernel() {
 get_major_kernel_version() {
 	local version="${1}"
 	[ -n "${version}" ] || die "kernel version not provided"
+version=${version#v}
 	major_version=$(echo "${version}" | cut -d. -f1)
 	minor_version=$(echo "${version}" | cut -d. -f2)
 	echo "${major_version}.${minor_version}"
@@ -348,12 +345,12 @@ setup_kernel() {
 	cd "${kernel_path}" || exit 1
 
 	# Apply version specific patches
-	${packaging_scripts_dir}/apply_patches.sh "${patches_dir_for_version}"
+	${script_dir}/apply_patches.sh "${patches_dir_for_version}"
 
 	# Apply version specific patches for experimental build
 	if [ "${experimental_kernel}" == "true" ] ;then
 		info "Apply experimental patches"
-		${packaging_scripts_dir}/apply_patches.sh "${experimental_patches_dir}"
+		${script_dir}/apply_patches.sh "${experimental_patches_dir}"
 	fi
 
 	[ -n "${hypervisor_target}" ] || hypervisor_target="kvm"
@@ -490,19 +487,10 @@ main() {
 
 	[ -z "${subcmd}" ] && usage 1
 
-	# If not kernel version take it from versions.yaml
 	if [ -z "$kernel_version" ]; then
-		if [[ ${experimental_kernel} == "true" ]]; then
-			kernel_version=$(get_from_kata_deps "assets.kernel-experimental.tag" "${kata_version}")
-			#Remove extra 'v'
-			kernel_version="${kernel_version#v}"
-		else
-			kernel_version=$(get_from_kata_deps "assets.kernel.version" "${kata_version}")
-			#Remove extra 'v'
-			kernel_version="${kernel_version#v}"
-		fi
+		echo "kernel_version is not set"
+		exit 1
 	fi
-
 	if [ -z "${kernel_path}" ]; then
 		config_version=$(get_config_version)
 		if [[ ${experimental_kernel} == "true" ]]; then

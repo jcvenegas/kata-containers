@@ -10,20 +10,13 @@ set -o pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-source "${script_dir}/../../scripts/lib.sh"
+die(){ local msg="$*" ; echo "ERROR: $msg" >&2; exit 1;}
+
 
 qemu_repo="${qemu_repo:-}"
 qemu_version="${qemu_version:-}"
 
-if [ -z "$qemu_repo" ]; then
-	info "Get qemu information from runtime versions.yaml"
-	qemu_url=$(get_from_kata_deps "assets.hypervisor.qemu.url")
-	[ -n "$qemu_url" ] || die "failed to get qemu url"
-	qemu_repo="${qemu_url}.git"
-fi
 [ -n "$qemu_repo" ] || die "failed to get qemu repo"
-
-[ -n "$qemu_version" ] || qemu_version=$(get_from_kata_deps "assets.hypervisor.qemu.version")
 [ -n "$qemu_version" ] || die "failed to get qemu version"
 
 "${script_dir}/build-base-qemu.sh" "${qemu_repo}" "${qemu_version}" "" "kata-static-qemu.tar.gz"
