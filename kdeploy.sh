@@ -46,6 +46,8 @@ main(){
 	#Problems to solve
 	# Still depends on host, should need just docker
 	# Still takes some time to build
+	# TODO remove pwd
+	pwd
 	mkdir -p kata-artifacts
 	pushd kata-artifacts
 	build_kernel
