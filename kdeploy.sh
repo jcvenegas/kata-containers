@@ -37,7 +37,7 @@ build_qemu() {
 	##  TODO get version from versions.yaml
 	## TODO fix  replace mv
 	export qemu_repo="https://github.com/qemu/qemu"
-	export qemu_version="v5.2.0"
+	export qemu_version="v6.0.0"
 	bash -x $bscript install_qemu
 	tar -tvf kata-static-qemu.tar.gz
 }
@@ -45,7 +45,7 @@ build_qemu_experimental() {
 	##  TODO get version from versions.yaml
 	## TODO fix  replace mv
 	export qemu_repo="https://github.com/qemu/qemu"
-	export qemu_version="v6.0.0"
+	export qemu_version="609d7596524ab"
 	bash -x $bscript install_qemu_experimental
 	tar -tvf kata-static-qemu.tar.gz
 }
@@ -57,14 +57,14 @@ main(){
 	# Still takes some time to build
 	mkdir -p kata-artifacts
 	pushd kata-artifacts
+	build_qemu
+	build_qemu_experimental
 	build_kernel
 	build_clh
 	build_experimental_kernel
 	#buildstr: "install_firecracker"
 	#buildstr: "install_image"
 	build_kata
-	build_qemu
-	build_qemu_experimental
 	popd
 	bash -x .github/workflows/gather-artifacts.sh
 	tar -tvf kata-static.tar.xz
