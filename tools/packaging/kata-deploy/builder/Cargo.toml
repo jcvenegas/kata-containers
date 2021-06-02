@@ -1,0 +1,9 @@
+[package]
+name = "kata-deploy-builder"
+version = "0.1.0"
+authors = ["Carlos Venegas <jos.c.venegas.munoz@intel.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
