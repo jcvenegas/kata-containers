@@ -1,5 +1,3 @@
-# This is a basic workflow to help you get started with Actions
-
 name: kata-deploy-build
 
 # Controls when the action will run.
@@ -8,21 +6,29 @@ on: [push, pull_request, workflow_dispatch]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  build-assets:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    strategy:
+      matrix:
+        asset:
+          - kernel
+          - shim-v2
+          - qemu
+          - cloud-hypervisor
+          - firecracker
+          - guest-image
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       - uses: docker-practice/actions-setup-docker@master
+        env:
+          KATA_ASSET: ${{ matrix.asset }}
+          TAR_OUTPUT: "kata-${{ matrix.asset }}.tar.gz"
 
-      # Runs a set of commands using the runners shell
-      - name: Build kata tarball
-        run: |
-          cd kata-deploy
-          pwd
-          bash -x ./kata-deploy.sh
+      - name: Build ${{ matrix.asset }}
+        run: ./kata-deploy-builder --tar-output "${TAR_OUTPUT}" build "${KATA_ASSET}"
 
+      - name: store-artifact ${KATA_ASSET} ${TAR_OUTPUT}
+        uses: actions/upload-artifact@v2
+        with:
+          name: kata-artifacts
+          path: ${TAR_OUTPUT}
