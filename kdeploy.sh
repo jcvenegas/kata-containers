@@ -3,7 +3,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-bscript="../.github/workflows/generate-local-artifact-tarball.sh"
+script_dir=$(dirname "$(readlink -f "$0")")
+bscript="${script_dir}/.github/workflows/generate-local-artifact-tarball.sh"
 
 build_clh() {
 	##  TODO get version from versions.yaml
@@ -40,14 +41,20 @@ build_qemu() {
 	bash -x $bscript install_qemu
 	tar -tvf kata-static-qemu.tar.gz
 }
+build_qemu_experimental() {
+	##  TODO get version from versions.yaml
+	## TODO fix  replace mv
+	export qemu_repo="https://github.com/qemu/qemu"
+	export qemu_version="v6.0.0"
+	bash -x $bscript install_qemu_experimental
+	tar -tvf kata-static-qemu.tar.gz
+}
 
 main(){
 
 	#Problems to solve
 	# Still depends on host, should need just docker
 	# Still takes some time to build
-	# TODO remove pwd
-	pwd
 	mkdir -p kata-artifacts
 	pushd kata-artifacts
 	build_kernel
@@ -57,6 +64,7 @@ main(){
 	#buildstr: "install_image"
 	build_kata
 	build_qemu
+	build_qemu_experimental
 	popd
 	bash -x .github/workflows/gather-artifacts.sh
 	tar -tvf kata-static.tar.xz

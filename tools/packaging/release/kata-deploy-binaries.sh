@@ -141,6 +141,12 @@ install_experimental_kernel() {
 }
 
 # Install static qemu asset
+install_qemu_experimental() {
+	kata_version=${1:-$kata_version}
+	info "build static qemu"
+	kata_version="${kata_version}" "${pkg_root_dir}/static-build/qemu/build-static-qemu-experimental.sh"
+}
+# Install static qemu asset
 install_qemu() {
 	kata_version=${1:-$kata_version}
 	info "build static qemu"
