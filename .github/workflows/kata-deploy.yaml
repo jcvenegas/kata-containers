@@ -6,7 +6,7 @@ on: [push, pull_request, workflow_dispatch]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build-assets:
+  build-asset:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -23,6 +23,9 @@ jobs:
         env:
           KATA_ASSET: ${{ matrix.asset }}
           TAR_OUTPUT: "kata-${{ matrix.asset }}.tar.gz"
+
+      - name: Build kata-deploy-builder
+        run: ./tools/packaging/kata-deploy/builder/scripts/docker-build.sh
 
       - name: Build ${{ matrix.asset }}
         run: ./kata-deploy-builder --tar-output "${TAR_OUTPUT}" build "${KATA_ASSET}"
