@@ -28,10 +28,28 @@ jobs:
         run: ./tools/packaging/kata-deploy/builder/scripts/docker-build.sh
 
       - name: Build ${{ matrix.asset }}
-        run: ./kata-deploy-builder --tar-output "${TAR_OUTPUT}" build "${KATA_ASSET}"
+        run: ./kata-deploy-builder build --tar-output "${TAR_OUTPUT}" "${KATA_ASSET}"
 
       - name: store-artifact ${KATA_ASSET} ${TAR_OUTPUT}
         uses: actions/upload-artifact@v2
         with:
           name: kata-artifacts
           path: ${TAR_OUTPUT}
+  create-kata-tarball:
+    runs-on: ubuntu-latest
+    needs: build-asset
+    steps:
+      - uses: actions/checkout@v2
+      - name: get-artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: kata-artifacts
+          path: kata-artifacts
+      - name: colate-artifacts
+        run: |
+          $GITHUB_WORKSPACE/.github/workflows/gather-artifacts.sh
+      - name: store-artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: release-candidate
+          path: kata-static.tar.xz
