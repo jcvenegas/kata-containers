@@ -34,6 +34,8 @@ pub enum SubCommand {
 #[derive(Clap)]
 pub struct BuildCmd {
     pub asset: String,
+    #[clap(short, long)]
+    pub tar_output: Option<String>,
 }
 
 //impl BuildCmd{
