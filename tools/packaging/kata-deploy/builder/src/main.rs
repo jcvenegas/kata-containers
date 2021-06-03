@@ -13,8 +13,8 @@ impl Builder {
         Ok(())
     }
 
-    fn build_guest_os() -> Result<()> {
-        println!("Build guest-os");
+    fn build_guest_rootfs() -> Result<()> {
+        println!("Build guest-rootfs");
         Ok(())
     }
 
@@ -40,7 +40,7 @@ fn build_asset(asset: &str) -> Result<()> {
             Builder::build_cloud_hypervisor().context("Failed to build cloud-hypervisor")
         }
         "firecracker" => Builder::build_firecracker().context("Failed to build firecracker"),
-        "guest-os" => Builder::build_guest_os().context("Failed to build guest-os"),
+        "guest-rootfs" => Builder::build_guest_rootfs().context("Failed to build guest-rootfs"),
         "kernel" => Builder::build_kernel().context("Failed to build kernel"),
         "qemu" => Builder::build_qemu().context("Failed to build qemu"),
         "shim-v2" => Builder::build_shim_v2().context("Failed to build shim-v2"),
