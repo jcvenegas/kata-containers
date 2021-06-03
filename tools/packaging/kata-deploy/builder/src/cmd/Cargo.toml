@@ -1,5 +1,5 @@
 [package]
-name = "kata-deploy-builder"
+name = "cmd"
 version = "0.1.0"
 authors = ["Carlos Venegas <jos.c.venegas.munoz@intel.com>"]
 edition = "2018"
@@ -7,5 +7,5 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.40"
-cmd = { path = "src/cmd" }
+clap = "3.0.0-beta.2"
+thiserror = "1.0"
