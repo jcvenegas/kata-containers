@@ -7,14 +7,21 @@ script_dir=$(dirname "$(readlink -f "$0")")
 bscript="${script_dir}/../../../../.github/workflows/generate-local-artifact-tarball.sh"
 
 build_clh() {
-	export cloud_hypervisor_repo="https://github.com/cloud-hypervisor/cloud-hypervisor"
-	export cloud_hypervisor_version="v15.0"
+	local cloud_hypervisor_repo
+	local cloud_hypervisor_version
+
+	cloud_hypervisor_repo="$(yq r versions.yaml assets.hypervisor.cloud_hypervisor.url)"
+	cloud_hypervisor_version="$(yq r versions.yaml assets.hypervisor.cloud_hypervisor.version)"
+
+	export cloud_hypervisor_repo
+	export cloud_hypervisor_version
+
 	bash -x $bscript install_clh
 	tar -tvf kata-static-clh.tar.gz
 }
 
 build_experimental_kernel(){
-	export kernel_version=="$(yq r versions.yaml assets.kernel-experimental.version)"
+	export kernel_version="$(yq r versions.yaml assets.kernel-experimental.version)"
 	bash -x $bscript "install_experimental_kernel"
 	tar -tvf kata-static-experimental-kernel.tar.gz
 }
@@ -32,7 +39,6 @@ build_kernel() {
 }
 
 build_qemu() {
-	export qemu_repo="https://github.com/qemu/qemu"
 	export qemu_repo="$(yq r versions.yaml assets.hypervisor.qemu.url)"
 	export qemu_version="$(yq r versions.yaml assets.hypervisor.qemu.version)"
 	bash -x $bscript install_qemu

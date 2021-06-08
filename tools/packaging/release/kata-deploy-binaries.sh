@@ -19,7 +19,6 @@ readonly project_to_attach="github.com/${project}/${project}"
 workdir="${WORKDIR:-$PWD}"
 
 destdir="${workdir}/kata-static"
-mkdir -p "${destdir}"
 
 die() {
 	msg="$*"
@@ -207,7 +206,6 @@ main() {
 			esac
 			;;
 		h) usage 0 ;;
-		w) workdir="${OPTARG}" ;;
 		esac
 	done
 	shift $((OPTIND - 1))
@@ -216,7 +214,7 @@ main() {
 
 	echo "Build kata version ${kata_version}"
 
-	destdir="${workdir}/kata-static-${kata_version}-$(uname -m)"
+	destdir="${workdir}/kata-static-${kata_version}-$(uname -m)/${build_target}"
 	info "DESTDIR ${destdir}"
 	info "Building $build_target"
 	mkdir -p "${destdir}"
@@ -258,12 +256,9 @@ main() {
 		;;
 	esac
 
-	untar_qemu_binaries
-
-	tarball_name="${destdir}.tar.xz"
-	pushd "${destdir}" >>/dev/null
-	tar cfJ "${tarball_name}" "./opt"
-	popd >>/dev/null
+	tarball_name="${workdir}/kata-static-${build_target}.tar.xz"
+	(cd "${destdir}"; tar cvfJ "${tarball_name}" ".")
+	tar tvf "${tarball_name}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
