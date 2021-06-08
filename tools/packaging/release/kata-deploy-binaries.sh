@@ -16,23 +16,10 @@ readonly repo_root_dir="$(cd "${script_dir}/../../../" && pwd)"
 readonly project="kata-containers"
 readonly prefix="/opt/kata"
 readonly project_to_attach="github.com/${project}/${project}"
-readonly tmp_dir=$(mktemp -d -t static-build-tmp.XXXXXXXXXX)
-readonly GOPATH="${tmp_dir}/go"
-# flag to decide if push tarball to github
-push=false
-export GOPATH
 workdir="${WORKDIR:-$PWD}"
-# This flag help us to test and run this script with changes
-# that are local
-test_local="false"
 
 destdir="${workdir}/kata-static"
 mkdir -p "${destdir}"
-
-exit_handler() {
-	[ -d "${tmp_dir}" ] || sudo rm -rf "${tmp_dir}"
-}
-trap exit_handler EXIT
 
 die() {
 	msg="$*"
@@ -88,7 +75,6 @@ verify_hub() {
 
 #Install guest image/initrd asset
 install_image() {
-	kata_version=${1:-$kata_version}
 	image_destdir="${destdir}/${prefix}/share/kata-containers/"
 	info "Create image"
 	image_tarball=$(find . -name 'kata-containers-'"${kata_version}"'-*.tar.gz')
@@ -112,13 +98,12 @@ install_image() {
 
 #Install kernel asset
 install_kernel() {
-	kata_version=${1:-$kata_version}
 	pushd "${pkg_root_dir}"
 	info "build kernel"
-	kata_version="${kata_version}" ./kernel/build-kernel.sh setup
-	kata_version="${kata_version}" ./kernel/build-kernel.sh build
+	./kernel/build-kernel.sh setup
+	./kernel/build-kernel.sh build
 	info "install kernel"
-	kata_version="${kata_version}" DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh install
+	DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh install
 	popd
 	pushd ${destdir}
 	tar -czvf ../kata-static-kernel.tar.gz *
@@ -127,13 +112,12 @@ install_kernel() {
 
 #Install experimental kernel asset
 install_experimental_kernel() {
-	kata_version=${1:-$kata_version}
 	pushd "${pkg_root_dir}"
 	info "build experimental kernel"
-	kata_version="${kata_version}" ./kernel/build-kernel.sh -e setup
-	kata_version="${kata_version}" ./kernel/build-kernel.sh -e build
+	./kernel/build-kernel.sh -e setup
+	./kernel/build-kernel.sh -e build
 	info "install experimental kernel"
-	kata_version="${kata_version}" DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh -e install
+	DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh -e install
 	popd
 	pushd ${destdir}
 	tar -czvf ../kata-static-experimental-kernel.tar.gz *
@@ -142,20 +126,18 @@ install_experimental_kernel() {
 
 # Install static qemu asset
 install_qemu() {
-	kata_version=${1:-$kata_version}
 	info "build static qemu"
-	kata_version="${kata_version}" "${pkg_root_dir}/static-build/qemu/build-static-qemu.sh"
+	"${pkg_root_dir}/static-build/qemu/build-static-qemu.sh"
 }
 
 # Install static firecracker asset
 install_firecracker() {
-	kata_version=${1:-$kata_version}
 	info "build static firecracker"
-	[ -f "firecracker/firecracker-static" ] || kata_version="${kata_version}" "${pkg_root_dir}/static-build/firecracker/build-static-firecracker.sh"
+	[ -f "firecracker/firecracker-static" ] || "${pkg_root_dir}/static-build/firecracker/build-static-firecracker.sh"
 	info "Install static firecracker"
 	mkdir -p "${destdir}/opt/kata/bin/"
-	sudo install -D --owner root --group root --mode 0744  firecracker/firecracker-static "${destdir}/opt/kata/bin/firecracker"
-	sudo install -D --owner root --group root --mode 0744  firecracker/jailer-static "${destdir}/opt/kata/bin/jailer"
+	sudo install -D --owner root --group root --mode 0744 firecracker/firecracker-static "${destdir}/opt/kata/bin/firecracker"
+	sudo install -D --owner root --group root --mode 0744 firecracker/jailer-static "${destdir}/opt/kata/bin/jailer"
 	pushd ${destdir}
 	tar -czvf ../kata-static-firecracker.tar.gz *
 	popd
@@ -163,9 +145,8 @@ install_firecracker() {
 
 # Install static cloud-hypervisor asset
 install_clh() {
-	kata_version=${1:-$kata_version}
 	info "build static cloud-hypervisor"
-	kata_version="${kata_version}" "${pkg_root_dir}/static-build/cloud-hypervisor/build-static-clh.sh"
+	"${pkg_root_dir}/static-build/cloud-hypervisor/build-static-clh.sh"
 	info "Install static cloud-hypervisor"
 	mkdir -p "${destdir}/opt/kata/bin/"
 	sudo install -D --owner root --group root --mode 0744 cloud-hypervisor/cloud-hypervisor "${destdir}/opt/kata/bin/cloud-hypervisor"
@@ -177,10 +158,7 @@ install_clh() {
 
 #Install all components that are not assets
 install_kata_components() {
-	kata_version=${1:-$kata_version}
 	pushd "${repo_root_dir}/src/runtime"
-	echo "Checkout to version ${kata_version}"
-	git checkout "${kata_version}"
 	echo "Build"
 	make \
 		PREFIX="${prefix}" \
@@ -206,35 +184,79 @@ untar_qemu_binaries() {
 	tar xf kata-static-qemu.tar.gz -C "${destdir}"
 }
 
+get_kata_version() {
+	local v
+	v=$(cat "${script_dir}/../../../VERSION")
+
+	if ! git describe --exact-match --tags HEAD; then
+		v="${v}~$(git rev-parse HEAD)"
+	fi
+	echo ${v}
+}
+
 main() {
-	while getopts "hlpw:" opt; do
+	local build_target
+	build_target="all"
+	while getopts "hlpw:-:" opt; do
 		case $opt in
+		-)
+			case "${OPTARG}" in
+			build=*)
+				build_target=${OPTARG#*=}
+				;;
+			esac
+			;;
 		h) usage 0 ;;
-		l) test_local="true" ;;
-		p) push="true" ;;
 		w) workdir="${OPTARG}" ;;
 		esac
 	done
 	shift $((OPTIND - 1))
 
-	kata_version=${1:-}
-	[ -n "${kata_version}" ] || usage 1
-	info "Requested version: ${kata_version}"
+	kata_version=$(get_kata_version)
 
-	if [[ "$test_local" == "true" ]]; then
-		verify_hub
-	fi
+	echo "Build kata version ${kata_version}"
 
 	destdir="${workdir}/kata-static-${kata_version}-$(uname -m)"
 	info "DESTDIR ${destdir}"
+	info "Building $build_target"
 	mkdir -p "${destdir}"
-	install_kata_components
-	install_experimental_kernel
-	install_kernel
-	install_clh
-	install_qemu
-	install_firecracker
-	install_image
+	case "${build_target}" in
+	all)
+		install_kata_components
+		install_experimental_kernel
+		install_kernel
+		install_clh
+		install_qemu
+		install_firecracker
+		install_image
+		;;
+	cloud-hypervisor)
+		install_clh
+		;;
+
+	firecracker)
+		install_firecracker
+		;;
+
+	guest-rootfs)
+		install_firecracker
+		;;
+
+	qemu)
+		install_qemu
+		;;
+
+	shim-v2)
+		install_kata_components
+		;;
+
+	kernel)
+		install_kernel
+		;;
+	*)
+		die "Invalid build target ${build_target}"
+		;;
+	esac
 
 	untar_qemu_binaries
 
@@ -242,13 +264,8 @@ main() {
 	pushd "${destdir}" >>/dev/null
 	tar cfJ "${tarball_name}" "./opt"
 	popd >>/dev/null
-	if [ "${push}" == "true" ]; then
-		hub -C "${GOPATH}/src/github.com/${project}/${project}" release edit -a "${tarball_name}" "${kata_version}"
-	else
-		echo "Wont push the tarball to github use -p option to do it."
-	fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  main $@
+	main $@
 fi
