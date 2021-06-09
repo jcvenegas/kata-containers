@@ -22,6 +22,7 @@ readonly version_file="${repo_root_dir}/VERSION"
 readonly clh_builder="${repo_root_dir}/tools/packaging/static-build/cloud-hypervisor/build-static-clh.sh"
 readonly firecracker_builder="${repo_root_dir}/tools/packaging/static-build/firecracker/build-static-firecracker.sh"
 readonly kernel_builder="${repo_root_dir}/tools/packaging/kernel/build-kernel.sh"
+readonly qemu_builder="${repo_root_dir}/tools/packaging/static-build/qemu/build-static-qemu.sh"
 
 workdir="${WORKDIR:-$PWD}"
 
@@ -108,7 +109,7 @@ install_experimental_kernel() {
 # Install static qemu asset
 install_qemu() {
 	info "build static qemu"
-	"${root_dir}/static-build/qemu/build-static-qemu.sh"
+	"${qemu_builder}"
 }
 
 # Install static firecracker asset
