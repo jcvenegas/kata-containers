@@ -22,7 +22,7 @@ jobs:
       - uses: docker-practice/actions-setup-docker@master
 
       - name: Build ${{ matrix.asset }}
-        run: ./tools/packaging/kata-deploy/local-build/kata-deploy-binaries.sh --build="${KATA_ASSET}"
+        run: ./tools/packaging/kata-deploy/local-build/kata-deploy-create-docker.sh --build="${KATA_ASSET}"
         env:
           KATA_ASSET: ${{ matrix.asset }}
           TAR_OUTPUT: ${{ matrix.asset }}.tar.gz
