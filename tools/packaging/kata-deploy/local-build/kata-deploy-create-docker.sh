@@ -12,7 +12,7 @@ set -o errtrace
 
 script_dir=$(dirname "$(readlink -f "$0")")
 kata_dir=$(realpath "${script_dir}/../../../../")
-kata_deploy_create="${script_dir}/kata-deploy-create.sh"
+kata_deploy_create="${script_dir}//kata-deploy-binaries.sh"
 uid=$(id -u ${USER})
 gid=$(id -g ${USER})
 
@@ -32,4 +32,4 @@ docker run ${TTY_OPT} \
 	--env USER=${USER} -v "${kata_dir}:${kata_dir}" \
 	--rm \
 	-w ${script_dir}\
-	build-kata-deploy bash -x "${kata_deploy_create}"
+	build-kata-deploy "${kata_deploy_create}" $@
