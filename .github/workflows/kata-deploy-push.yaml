@@ -16,7 +16,7 @@ jobs:
           - qemu
           - cloud-hypervisor
           - firecracker
-          - guest-rootfs
+          - rootfs-image
     steps:
       - uses: actions/checkout@v2
       - uses: docker-practice/actions-setup-docker@master
