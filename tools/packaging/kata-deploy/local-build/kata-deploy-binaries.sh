@@ -17,6 +17,7 @@ readonly script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly prefix="/opt/kata"
 readonly repo_root_dir="$(cd "${script_dir}/../../../.." && pwd)"
 readonly version_file="${repo_root_dir}/VERSION"
+readonly versions_yaml="${repo_root_dir}/versions.yaml"
 
 readonly clh_builder="${repo_root_dir}/tools/packaging/static-build/cloud-hypervisor/build-static-clh.sh"
 readonly firecracker_builder="${repo_root_dir}/tools/packaging/static-build/firecracker/build-static-firecracker.sh"
@@ -54,7 +55,7 @@ version: The kata version that will be use to create the tarball
 options:
 
 -h|--help       : Show this help
---build=<asset> :  
+--build=<asset> :
 	all
 	cloud-hypervisor
 	firecracker
@@ -85,6 +86,7 @@ install_initrd() {
 #Install kernel asset
 install_kernel() {
 	info "build kernel"
+	export kernel_version=="$(yq r $versions_yaml assets.version)"
 	"${kernel_builder}" setup
 	"${kernel_builder}" build
 	info "install kernel"
@@ -94,6 +96,7 @@ install_kernel() {
 #Install experimental kernel asset
 install_experimental_kernel() {
 	info "build experimental kernel"
+	export kernel_version="$(yq r $versions_yaml assets.kernel-experimental.version)"
 	"${kernel_builder}" -e setup
 	"${kernel_builder}" -e build
 	info "install experimental kernel"
@@ -103,6 +106,8 @@ install_experimental_kernel() {
 # Install static qemu asset
 install_qemu() {
 	info "build static qemu"
+	export qemu_repo="$(yq r $versions_yaml assets.hypervisor.qemu.url)"
+	export qemu_version="$(yq r $versions_yaml assets.hypervisor.qemu.version)"
 	"${qemu_builder}"
 }
 
@@ -118,6 +123,12 @@ install_firecracker() {
 
 # Install static cloud-hypervisor asset
 install_clh() {
+	local cloud_hypervisor_repo
+	local cloud_hypervisor_version
+
+	cloud_hypervisor_repo="$(yq r $versions_yaml assets.hypervisor.cloud_hypervisor.url)"
+	cloud_hypervisor_version="$(yq r $versions_yaml assets.hypervisor.cloud_hypervisor.version)"
+
 	info "build static cloud-hypervisor"
 	bash -x "${clh_builder}"
 	info "Install static cloud-hypervisor"
@@ -142,11 +153,6 @@ install_shimv2() {
 	pushd "${destdir}/${prefix}/share/defaults/${project}"
 	ln -sf "configuration-qemu.toml" configuration.toml
 	popd
-}
-
-untar_qemu_binaries() {
-	info "Install static qemu"
-	tar xf kata-static-qemu.tar.gz -C "${destdir}"
 }
 
 get_kata_version() {
@@ -245,6 +251,7 @@ main() {
 
 	echo "Build kata version ${kata_version}"
 	workdir="${workdir}/kata-static-${kata_version}-$(uname -m)/"
+	ln -sf "${workdir}" current-kata-build
 	for t in "${build_targets[@]}"; do
 		destdir="${workdir}/${t}/destdir"
 		builddir="${workdir}/${t}/builddir"

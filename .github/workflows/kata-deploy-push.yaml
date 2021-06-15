@@ -31,7 +31,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: kata-artifacts
-          path: kata-static-${{ matrix.asset }}.tar.gz
+          path: current-kata-build/kata-static-${{ matrix.asset }}.tar.gz
 
   create-kata-tarball:
     runs-on: ubuntu-latest
