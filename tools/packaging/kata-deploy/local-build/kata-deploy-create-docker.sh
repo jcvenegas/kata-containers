@@ -25,7 +25,7 @@ docker build -t build-kata-deploy \
 	--build-arg IMG_USER="${USER}"\
 	--build-arg UID=${uid}\
 	--build-arg GID=${gid}\
-	"${script_dir}"
+	"${script_dir}/dockerbuild/"
 docker run ${TTY_OPT} \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	--user ${uid}:${gid} \

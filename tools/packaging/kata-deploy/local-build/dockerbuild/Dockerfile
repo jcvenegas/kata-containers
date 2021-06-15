@@ -28,7 +28,7 @@ RUN apt-get install docker-ce-cli -y
 ARG IMG_USER=kata-builder
 ARG UID=1000
 ARG GID=1000
-RUN adduser ${IMG_USER} --uid=${UID}
+RUN if [ ${IMG_USER} != "root" ]; then adduser ${IMG_USER} --uid=${UID};fi
 RUN sh -c "echo '${IMG_USER} ALL=NOPASSWD: ALL' >> /etc/sudoers"
 
 # kernel deps
