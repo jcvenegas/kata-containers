@@ -14,7 +14,6 @@ readonly project="kata-containers"
 readonly script_name="$(basename "${BASH_SOURCE[0]}")"
 readonly script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-readonly root_dir="$(cd "${script_dir}/.." && pwd)"
 readonly prefix="/opt/kata"
 readonly repo_root_dir="$(cd "${script_dir}/../../../.." && pwd)"
 readonly version_file="${repo_root_dir}/VERSION"
@@ -23,6 +22,7 @@ readonly clh_builder="${repo_root_dir}/tools/packaging/static-build/cloud-hyperv
 readonly firecracker_builder="${repo_root_dir}/tools/packaging/static-build/firecracker/build-static-firecracker.sh"
 readonly kernel_builder="${repo_root_dir}/tools/packaging/kernel/build-kernel.sh"
 readonly qemu_builder="${repo_root_dir}/tools/packaging/static-build/qemu/build-static-qemu.sh"
+readonly rootfs_builder="${repo_root_dir}/tools/packaging/guest-image/build_image.sh"
 
 workdir="${WORKDIR:-$PWD}"
 
@@ -53,34 +53,33 @@ version: The kata version that will be use to create the tarball
 
 options:
 
--h      : Show this help
+-h|--help       : Show this help
+--build=<asset> :  
+	all
+	cloud-hypervisor
+	firecracker
+	kernel
+	qemu
+	rootfs-image
+	rootfs-initrd
+	shim-v2
 EOT
 
 	exit "${return_code}"
 }
 
 
-#Install guest image/initrd asset
+#Install guest image
 install_image() {
-	image_destdir="${destdir}/${prefix}/share/kata-containers/"
 	info "Create image"
-	image_tarball=$(find . -name 'kata-containers-'"${kata_version}"'-*.tar.gz')
-	[ -f "${image_tarball}" ] || "${root_dir}/guest-image/build_image.sh" -v "${kata_version}"
-	image_tarball=$(find . -name 'kata-containers-'"${kata_version}"'-*.tar.gz')
-	[ -f "${image_tarball}" ] || die "image not found"
-	info "Install image in destdir ${image_tarball}"
-	mkdir -p "${image_destdir}"
-	tar xf "${image_tarball}" -C "${image_destdir}"
-	pushd "${destdir}/${prefix}/share/kata-containers/" >>/dev/null
-	info "Create image default symlinks"
-	image=$(find . -name 'kata-containers-image*.img')
-	initrd=$(find . -name 'kata-containers-initrd*.initrd')
-	ln -sf "${image}" kata-containers.img
-	ln -sf "${initrd}" kata-containers-initrd.img
-	popd >>/dev/null
-	pushd ${destdir}
-	tar -czvf ../kata-static-image.tar.gz *
-	popd
+	set -x
+	bash -x "${rootfs_builder}" --imagetype=image --prefix="${prefix}" --destdir="${destdir}"
+}
+
+#Install guest initrd
+install_initrd() {
+	info "Create initrd"
+	"${rootfs_builder}" --imagetype=initrd --prefix="${prefix}" --destdir="${destdir}"
 }
 
 #Install kernel asset
@@ -94,16 +93,11 @@ install_kernel() {
 
 #Install experimental kernel asset
 install_experimental_kernel() {
-	pushd "${root_dir}"
 	info "build experimental kernel"
-	./kernel/build-kernel.sh -e setup
-	./kernel/build-kernel.sh -e build
+	"${kernel_builder}" -e setup
+	"${kernel_builder}" -e build
 	info "install experimental kernel"
-	DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh -e install
-	popd
-	pushd ${destdir}
-	tar -czvf ../kata-static-experimental-kernel.tar.gz *
-	popd
+	DESTDIR="${destdir}" PREFIX="${prefix}" "${kernel_builder}" -e install
 }
 
 # Install static qemu asset
@@ -186,10 +180,13 @@ handle_build(){
 		install_firecracker
 		;;
 
-	guest-rootfs)
-		install_firecracker
+	rootfs-image)
+		install_image
 		;;
 
+	rootfs-initrd)
+		install_initrd
+		;;
 	qemu)
 		install_qemu
 		;;
@@ -207,36 +204,56 @@ handle_build(){
 	esac
 
 	tarball_name="${workdir}/kata-static-${build_target}.tar.xz"
-	(cd "${destdir}"; tar cvfJ "${tarball_name}" ".")
+	(cd "${destdir}"; sudo tar cvfJ "${tarball_name}" ".")
 	tar tvf "${tarball_name}"
 }
 
 main() {
-	local build_target
-	build_target="all"
+	local build_targets
+	build_targets=(
+	cloud-hypervisor
+	firecracker
+	rootfs-image
+	rootfs-initrd
+	qemu
+	shim-v2
+	kernel
+	)
 	while getopts "hlpw:-:" opt; do
 		case $opt in
-		-)
-			case "${OPTARG}" in
-			build=*)
-				build_target=${OPTARG#*=}
+			-)
+				case "${OPTARG}" in
+					build=*)
+						build_targets=(${OPTARG#*=})
+						;;
+					help)
+						usage 0
+						;;
+					*)
+						usage 1
+						;;
+				esac
 				;;
-			esac
-			;;
-		h) usage 0 ;;
+			h) usage 0 ;;
+			*) usage 1 ;;
 		esac
 	done
 	shift $((OPTIND - 1))
 
+	set -x
 	kata_version=$(get_kata_version)
 
 	echo "Build kata version ${kata_version}"
 	workdir="${workdir}/kata-static-${kata_version}-$(uname -m)/"
-	destdir="${workdir}/${build_target}"
-	info "DESTDIR ${destdir}"
-	info "Building $build_target"
-	mkdir -p "${destdir}"
-	(cd "${workdir}"; handle_build "${build_target}")
+	for t in "${build_targets[@]}"; do
+		destdir="${workdir}/${t}/destdir"
+		builddir="${workdir}/${t}/builddir"
+		info "DESTDIR ${destdir}"
+		info "Building $t"
+		mkdir -p "${destdir}"
+		mkdir -p "${builddir}"
+		(cd "${builddir}"; handle_build "${t}")
+	done
 
 }
 
