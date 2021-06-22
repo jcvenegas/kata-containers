@@ -24,9 +24,6 @@ jobs:
       - name: Build ${{ matrix.asset }}
         run: |
           ./tools/packaging/kata-deploy/local-build/kata-deploy-binaries-in-docker.sh --build="${KATA_ASSET}"
-          pwd
-          ls
-          ls current-kata-build/*
         env:
           KATA_ASSET: ${{ matrix.asset }}
           TAR_OUTPUT: ${{ matrix.asset }}.tar.gz
@@ -35,7 +32,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: kata-artifacts
-          path: current-kata-build/kata-static-${{ matrix.asset }}.tar.xz
+          path: kata-build/kata-static-${{ matrix.asset }}.tar.xz
 
   create-kata-tarball:
     runs-on: ubuntu-latest

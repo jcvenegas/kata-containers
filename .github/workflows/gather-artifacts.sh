@@ -8,7 +8,7 @@ set -o errexit
 set -o pipefail
 
 pushd kata-artifacts >>/dev/null
-for c in ./*.tar.gz
+for c in ./*.tar.xz
 do
     echo "untarring tarball $c"
     tar -xvf $c

@@ -54,8 +54,8 @@ version: The kata version that will be use to create the tarball
 
 options:
 
--h|--help       : Show this help
---build=<asset> :
+-h|--help      	      : Show this help
+--build=<asset>       :
 	all
 	cloud-hypervisor
 	firecracker
@@ -68,7 +68,6 @@ EOT
 
 	exit "${return_code}"
 }
-
 
 #Install guest image
 install_image() {
@@ -165,7 +164,7 @@ get_kata_version() {
 	echo ${v}
 }
 
-handle_build(){
+handle_build() {
 	local build_target
 	build_target="$1"
 	case "${build_target}" in
@@ -210,38 +209,41 @@ handle_build(){
 	esac
 
 	tarball_name="${workdir}/kata-static-${build_target}.tar.xz"
-	(cd "${destdir}"; sudo tar cvfJ "${tarball_name}" ".")
+	(
+		cd "${destdir}"
+		sudo tar cvfJ "${tarball_name}" "."
+	)
 	tar tvf "${tarball_name}"
 }
 
 main() {
 	local build_targets
 	build_targets=(
-	cloud-hypervisor
-	firecracker
-	rootfs-image
-	rootfs-initrd
-	qemu
-	shim-v2
-	kernel
+		cloud-hypervisor
+		firecracker
+		rootfs-image
+		rootfs-initrd
+		qemu
+		shim-v2
+		kernel
 	)
 	while getopts "hlpw:-:" opt; do
 		case $opt in
-			-)
-				case "${OPTARG}" in
-					build=*)
-						build_targets=(${OPTARG#*=})
-						;;
-					help)
-						usage 0
-						;;
-					*)
-						usage 1
-						;;
-				esac
+		-)
+			case "${OPTARG}" in
+			build=*)
+				build_targets=(${OPTARG#*=})
 				;;
-			h) usage 0 ;;
-			*) usage 1 ;;
+			help)
+				usage 0
+				;;
+			*)
+				usage 1
+				;;
+			esac
+			;;
+		h) usage 0 ;;
+		*) usage 1 ;;
 		esac
 	done
 	shift $((OPTIND - 1))
@@ -250,8 +252,7 @@ main() {
 	kata_version=$(get_kata_version)
 
 	echo "Build kata version ${kata_version}"
-	workdir="${workdir}/kata-static-${kata_version}-$(uname -m)/"
-	ln -sf "${workdir}" current-kata-build
+	workdir="${workdir}/build"
 	for t in "${build_targets[@]}"; do
 		destdir="${workdir}/${t}/destdir"
 		builddir="${workdir}/${t}/builddir"
@@ -259,7 +260,10 @@ main() {
 		info "Building $t"
 		mkdir -p "${destdir}"
 		mkdir -p "${builddir}"
-		(cd "${builddir}"; handle_build "${t}")
+		(
+			cd "${builddir}"
+			handle_build "${t}"
+		)
 	done
 
 }
