@@ -86,10 +86,10 @@ main() {
 		-)
 			case "${OPTARG}" in
 			imagetype=image)
-				img_type=image
+				image_type=image
 				;;
 			imagetype=initrd)
-				img_type=initrd
+				image_type=initrd
 				;;
 			prefix=*)
 				prefix=${OPTARG#*=}
@@ -115,6 +115,8 @@ main() {
 	done
 	readonly destdir
 	readonly builddir
+
+	echo "build ${image_type}"
 
 	#image information
 	img_distro=$(get_from_kata_deps "assets.image.architecture.${arch_target}.name")

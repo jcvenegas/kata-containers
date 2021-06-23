@@ -176,6 +176,7 @@ handle_build() {
 		install_qemu
 		install_firecracker
 		install_image
+		install_initrd
 		;;
 	cloud-hypervisor)
 		install_clh
