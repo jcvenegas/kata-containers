@@ -26,7 +26,7 @@ jobs:
           ./tools/packaging/kata-deploy/local-build/kata-deploy-binaries-in-docker.sh --build="${KATA_ASSET}"
           build_dir=$(readlink -f build)
           # store-artifact does not work with symlink
-          cp -r "${build_dir}" "kata-build"
+          sudo cp -r "${build_dir}" "kata-build"
         env:
           KATA_ASSET: ${{ matrix.asset }}
           TAR_OUTPUT: ${{ matrix.asset }}.tar.gz
