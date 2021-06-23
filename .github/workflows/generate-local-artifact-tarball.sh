@@ -8,6 +8,10 @@
 set -o errexit
 set -o pipefail
 
+script_dir=$(dirname "$(readlink -f "$0")")
+
+KATA_REPO=$(realpath ${script_dir}/../..)
+
 
 main() {
     artifact_stage=${1:-}
@@ -17,18 +21,12 @@ main() {
         exit 1
     fi
 
-    tag=$(echo $GITHUB_REF | cut -d/ -f3-)
-    pushd $GITHUB_WORKSPACE/tools/packaging
-    git checkout $tag
-    ./scripts/gen_versions_txt.sh $tag
-    popd
-
-    pushd $GITHUB_WORKSPACE/tools/packaging/release
+    pushd $KATA_REPO/tools/packaging/release
     source ./kata-deploy-binaries.sh
-    ${artifact_stage} $tag
+    ${artifact_stage} HEAD
     popd
 
-    mv $GITHUB_WORKSPACE/tools/packaging/release/kata-static-${artifact}.tar.gz .
+    mv $KATA_REPO/tools/packaging/release/kata-static-${artifact}.tar.gz .
 }
 
 main $@

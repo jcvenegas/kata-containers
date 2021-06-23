@@ -31,10 +31,11 @@ fi
 
 info "Build ${firecracker_repo} version: ${firecracker_version}"
 
-git clone ${firecracker_repo}
+[ -d firecracker ] || git clone ${firecracker_repo}
 cd firecracker
+git fetch
 git checkout ${firecracker_version}
-./tools/devtool --unattended build --release
+sudo ./tools/devtool --unattended build --release
 
-ln -s ./build/cargo_target/x86_64-unknown-linux-musl/release/firecracker ./firecracker-static
-ln -s ./build/cargo_target/x86_64-unknown-linux-musl/release/jailer ./jailer-static
+ln -sf ./build/cargo_target/x86_64-unknown-linux-musl/release/firecracker ./firecracker-static
+ln -sf ./build/cargo_target/x86_64-unknown-linux-musl/release/jailer ./jailer-static
