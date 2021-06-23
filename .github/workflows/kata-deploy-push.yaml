@@ -1,20 +1,7 @@
 name: kata-deploy-build
 
-on:
-  push:
-    # branches to consider in the event; optional, defaults to all
-    branches:
-      - main
-  # pull_request event is required only for autolabeler
-  pull_request:
-    # Only following types are handled by the action, but one can default to all as well
-    types: [opened, reopened, synchronize]
+on: push
 
-# Controls when the action will run.
-on: [push, pull_request, workflow_dispatch]
-  # Allows you to run this workflow manually from the Actions tab
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build-asset:
     runs-on: ubuntu-latest
@@ -58,18 +45,11 @@ jobs:
         with:
           name: kata-artifacts
           path: kata-artifacts
-      - name: colate-artifacts
+      - name: merge-artifacts
         run: |
-          $GITHUB_WORKSPACE/.github/workflows/gather-artifacts.sh
+          ./tools/packaging/kata-deploy/local-build/kata-deploy-merge-builds.sh kata-artifacts
       - name: store-artifacts
         uses: actions/upload-artifact@v2
         with:
           name: release-candidate
           path: kata-static.tar.xz
-  update_release_draft:
-    runs-on: ubuntu-latest
-    steps:
-      # Drafts your next Release notes as Pull Requests are merged into "master"
-      - uses: release-drafter/release-drafter@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
