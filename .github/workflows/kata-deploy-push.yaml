@@ -1,5 +1,15 @@
 name: kata-deploy-build
 
+on:
+  push:
+    # branches to consider in the event; optional, defaults to all
+    branches:
+      - main
+  # pull_request event is required only for autolabeler
+  pull_request:
+    # Only following types are handled by the action, but one can default to all as well
+    types: [opened, reopened, synchronize]
+
 # Controls when the action will run.
 on: [push, pull_request, workflow_dispatch]
   # Allows you to run this workflow manually from the Actions tab
