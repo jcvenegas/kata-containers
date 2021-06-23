@@ -33,6 +33,7 @@ jobs:
         with:
           name: kata-artifacts
           path: kata-build/kata-static-${{ matrix.asset }}.tar.xz
+          if-no-files-found: error
 
   create-kata-tarball:
     runs-on: ubuntu-latest
