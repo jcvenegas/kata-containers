@@ -21,6 +21,10 @@ if [ -t 1 ]; then
 	TTY_OPT="-ti"
 fi
 
+if [ "$?" -eq 0 ] && [ "${script_dir}" != "${PWD}" ]; then
+	ln -sf "${script_dir}/build" "${PWD}/build"
+fi
+
 docker build -t build-kata-deploy \
 	--build-arg IMG_USER="${USER}" \
 	--build-arg UID=${uid} \
@@ -34,6 +38,3 @@ docker run ${TTY_OPT} \
 	-w ${script_dir} \
 	build-kata-deploy "${kata_deploy_create}" $@
 
-if [ "$?" -eq 0 ] && [ "${script_dir}" != "${PWD}" ]; then
-	ln -sf "${script_dir}/build" "${PWD}/build"
-fi
