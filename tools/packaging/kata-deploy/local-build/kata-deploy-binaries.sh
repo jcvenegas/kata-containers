@@ -72,8 +72,7 @@ EOT
 #Install guest image
 install_image() {
 	info "Create image"
-	set -x
-	bash -x "${rootfs_builder}" --imagetype=image --prefix="${prefix}" --destdir="${destdir}"
+	"${rootfs_builder}" --imagetype=image --prefix="${prefix}" --destdir="${destdir}"
 }
 
 #Install guest initrd
@@ -249,7 +248,6 @@ main() {
 	done
 	shift $((OPTIND - 1))
 
-	set -x
 	kata_version=$(get_kata_version)
 
 	echo "Build kata version ${kata_version}"
