@@ -9,13 +9,19 @@ set -o nounset
 set -o pipefail
 set -o errtrace
 
-kata_dir=${1:-build}
+kata_build_dir=${1:-build}
+tar_path="${PWD}/kata-static.tar.xz"
 
-cd "${kata_dir}"
-for c in ./kata-static-*.tar.xz
+cd "${kata_build_dir}"
+tarball_content_dir="${PWD}/kata-tarball-content"
+rm -rf "${tarball_content_dir}"
+mkdir "${tarball_content_dir}"
+
+for c in "kata-static-*.tar.xz"
 do
-    echo "untarring tarball $c"
-    tar -xvf $c
+    echo "untarring tarball "${c}" into ${tarball_content_dir}"
+    tar -xvf "${c}" -C "${tarball_content_dir}"
 done
 
-tar cvfJ ../kata-static.tar.xz ./opt
+echo "create ${tar_path}"
+(cd "${tarball_content_dir}"; tar cvfJ "${tar_path}" .)
