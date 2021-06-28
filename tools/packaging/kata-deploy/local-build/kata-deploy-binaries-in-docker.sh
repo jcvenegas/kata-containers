@@ -25,7 +25,7 @@ if [ "$?" -eq 0 ] && [ "${script_dir}" != "${PWD}" ]; then
 	ln -sf "${script_dir}/build" "${PWD}/build"
 fi
 
-docker build -t build-kata-deploy \
+docker build -q -t build-kata-deploy \
 	--build-arg IMG_USER="${USER}" \
 	--build-arg UID=${uid} \
 	--build-arg GID=${gid} \

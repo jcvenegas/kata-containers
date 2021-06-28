@@ -156,10 +156,6 @@ install_shimv2() {
 get_kata_version() {
 	local v
 	v=$(cat "${version_file}")
-
-	if ! git describe --exact-match --tags HEAD; then
-		v="${v}~$(git rev-parse HEAD)"
-	fi
 	echo ${v}
 }
 
