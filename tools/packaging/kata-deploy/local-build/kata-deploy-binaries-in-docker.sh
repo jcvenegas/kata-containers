@@ -18,7 +18,7 @@ gid=$(id -g ${USER})
 
 TTY_OPT="-i"
 if [ -t 1 ]; then
-	TTY_OPT="-ti"
+	TTY_OPT="-i"
 fi
 
 if [ "$?" -eq 0 ] && [ "${script_dir}" != "${PWD}" ]; then

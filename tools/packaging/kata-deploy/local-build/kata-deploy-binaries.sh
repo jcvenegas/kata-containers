@@ -39,6 +39,10 @@ info() {
 	echo "INFO: $*"
 }
 
+error() {
+	echo "ERROR: $*"
+}
+
 usage() {
 	return_code=${1:-0}
 	cat <<EOT
@@ -128,7 +132,7 @@ install_clh() {
 	cloud_hypervisor_version="$(yq r $versions_yaml assets.hypervisor.cloud_hypervisor.version)"
 
 	info "build static cloud-hypervisor"
-	bash -x "${clh_builder}"
+	"${clh_builder}"
 	info "Install static cloud-hypervisor"
 	mkdir -p "${destdir}/opt/kata/bin/"
 	sudo install -D --owner root --group root --mode 0744 cloud-hypervisor/cloud-hypervisor "${destdir}/opt/kata/bin/cloud-hypervisor"
@@ -160,6 +164,7 @@ get_kata_version() {
 }
 
 handle_build() {
+	info "DESTDIR ${destdir}"
 	local build_target
 	build_target="$1"
 	case "${build_target}" in
@@ -214,6 +219,7 @@ handle_build() {
 
 main() {
 	local build_targets
+	local silent
 	build_targets=(
 		cloud-hypervisor
 		firecracker
@@ -223,7 +229,8 @@ main() {
 		shim-v2
 		kernel
 	)
-	while getopts "hlpw:-:" opt; do
+	silent=false
+	while getopts "hs-:" opt; do
 		case $opt in
 		-)
 			case "${OPTARG}" in
@@ -239,6 +246,7 @@ main() {
 			esac
 			;;
 		h) usage 0 ;;
+		s) silent=true;;
 		*) usage 1 ;;
 		esac
 	done
@@ -246,19 +254,27 @@ main() {
 
 	kata_version=$(get_kata_version)
 
-	echo "Build kata version ${kata_version}"
 	workdir="${workdir}/build"
 	for t in "${build_targets[@]}"; do
 		destdir="${workdir}/${t}/destdir"
 		builddir="${workdir}/${t}/builddir"
-		info "DESTDIR ${destdir}"
-		info "Building $t"
+		echo "Build kata version ${kata_version}: ${t}"
 		mkdir -p "${destdir}"
 		mkdir -p "${builddir}"
+		if [ "${silent}" == true ]; then
+			log_file="${builddir}/log"
+			echo "build log: ${log_file}"
+		fi
 		(
-			cd "${builddir}"
+		cd "${builddir}" 
+		if [ "${silent}" == true ] && ! handle_build "${t}" &> "$log_file";then
+			error "Failed to build: $t, logs:"
+			cat "${log_file}"
+			exit 1
+		else 
 			handle_build "${t}"
-		)
+		fi
+		) 
 	done
 
 }
