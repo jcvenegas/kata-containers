@@ -52,5 +52,5 @@ jobs:
       - name: store-artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: release-candidate
+          name: kata-static-tarball
           path: kata-static.tar.xz
