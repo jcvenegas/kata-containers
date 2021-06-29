@@ -18,14 +18,14 @@ gid=$(id -g ${USER})
 
 TTY_OPT="-i"
 if [ -t 1 ]; then
-	TTY_OPT="-ti"
+	TTY_OPT="-i"
 fi
 
 if [ "$?" -eq 0 ] && [ "${script_dir}" != "${PWD}" ]; then
 	ln -sf "${script_dir}/build" "${PWD}/build"
 fi
 
-docker build -t build-kata-deploy \
+docker build -q -t build-kata-deploy \
 	--build-arg IMG_USER="${USER}" \
 	--build-arg UID=${uid} \
 	--build-arg GID=${gid} \

@@ -86,10 +86,18 @@ main() {
 		-)
 			case "${OPTARG}" in
 			imagetype=image)
-				img_type=image
+				image_type=image
+				#image information
+				img_distro=$(get_from_kata_deps "assets.image.architecture.${arch_target}.name")
+				img_os_version=$(get_from_kata_deps "assets.image.architecture.${arch_target}.version")
+				image_name="kata-${img_distro}-${img_os_version}.${image_type}"
 				;;
 			imagetype=initrd)
-				img_type=initrd
+				image_type=initrd
+				#initrd information
+				initrd_distro=$(get_from_kata_deps "assets.initrd.architecture.${arch_target}.name")
+				initrd_os_version=$(get_from_kata_deps "assets.initrd.architecture.${arch_target}.version")
+				initrd_name="kata-${initrd_distro}-${initrd_os_version}.${image_type}"
 				;;
 			prefix=*)
 				prefix=${OPTARG#*=}
@@ -116,15 +124,9 @@ main() {
 	readonly destdir
 	readonly builddir
 
-	#image information
-	img_distro=$(get_from_kata_deps "assets.image.architecture.${arch_target}.name")
-	img_os_version=$(get_from_kata_deps "assets.image.architecture.${arch_target}.version")
-	image_name="kata-${img_distro}-${img_os_version}.${image_type}"
+	echo "build ${image_type}"
 
-	#initrd information
-	initrd_distro=$(get_from_kata_deps "assets.initrd.architecture.${arch_target}.name")
-	initrd_os_version=$(get_from_kata_deps "assets.initrd.architecture.${arch_target}.version")
-	initrd_name="kata-${img_distro}-${img_os_version}.${image_type}"
+
 
 	install_dir="${destdir}/${prefix}/share/kata-containers/"
 	readonly install_dir

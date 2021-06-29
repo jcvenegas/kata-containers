@@ -39,6 +39,10 @@ info() {
 	echo "INFO: $*"
 }
 
+error() {
+	echo "ERROR: $*"
+}
+
 usage() {
 	return_code=${1:-0}
 	cat <<EOT
@@ -72,8 +76,7 @@ EOT
 #Install guest image
 install_image() {
 	info "Create image"
-	set -x
-	bash -x "${rootfs_builder}" --imagetype=image --prefix="${prefix}" --destdir="${destdir}"
+	"${rootfs_builder}" --imagetype=image --prefix="${prefix}" --destdir="${destdir}"
 }
 
 #Install guest initrd
@@ -129,7 +132,7 @@ install_clh() {
 	cloud_hypervisor_version="$(yq r $versions_yaml assets.hypervisor.cloud_hypervisor.version)"
 
 	info "build static cloud-hypervisor"
-	bash -x "${clh_builder}"
+	"${clh_builder}"
 	info "Install static cloud-hypervisor"
 	mkdir -p "${destdir}/opt/kata/bin/"
 	sudo install -D --owner root --group root --mode 0744 cloud-hypervisor/cloud-hypervisor "${destdir}/opt/kata/bin/cloud-hypervisor"
@@ -157,14 +160,11 @@ install_shimv2() {
 get_kata_version() {
 	local v
 	v=$(cat "${version_file}")
-
-	if ! git describe --exact-match --tags HEAD; then
-		v="${v}~$(git rev-parse HEAD)"
-	fi
 	echo ${v}
 }
 
 handle_build() {
+	info "DESTDIR ${destdir}"
 	local build_target
 	build_target="$1"
 	case "${build_target}" in
@@ -176,6 +176,7 @@ handle_build() {
 		install_qemu
 		install_firecracker
 		install_image
+		install_initrd
 		;;
 	cloud-hypervisor)
 		install_clh
@@ -218,6 +219,7 @@ handle_build() {
 
 main() {
 	local build_targets
+	local silent
 	build_targets=(
 		cloud-hypervisor
 		firecracker
@@ -227,7 +229,8 @@ main() {
 		shim-v2
 		kernel
 	)
-	while getopts "hlpw:-:" opt; do
+	silent=false
+	while getopts "hs-:" opt; do
 		case $opt in
 		-)
 			case "${OPTARG}" in
@@ -243,26 +246,36 @@ main() {
 			esac
 			;;
 		h) usage 0 ;;
+		s) silent=true ;;
 		*) usage 1 ;;
 		esac
 	done
 	shift $((OPTIND - 1))
 
-	set -x
 	kata_version=$(get_kata_version)
 
-	echo "Build kata version ${kata_version}"
 	workdir="${workdir}/build"
 	for t in "${build_targets[@]}"; do
 		destdir="${workdir}/${t}/destdir"
 		builddir="${workdir}/${t}/builddir"
-		info "DESTDIR ${destdir}"
-		info "Building $t"
+		echo "Build kata version ${kata_version}: ${t}"
 		mkdir -p "${destdir}"
 		mkdir -p "${builddir}"
+		if [ "${silent}" == true ]; then
+			log_file="${builddir}/log"
+			echo "build log: ${log_file}"
+		fi
 		(
 			cd "${builddir}"
-			handle_build "${t}"
+			if [ "${silent}" == true ]; then
+				if ! handle_build "${t}" &>"$log_file"; then
+					error "Failed to build: $t, logs:"
+					cat "${log_file}"
+					exit 1
+				fi
+			else
+				handle_build "${t}"
+			fi
 		)
 	done
 
