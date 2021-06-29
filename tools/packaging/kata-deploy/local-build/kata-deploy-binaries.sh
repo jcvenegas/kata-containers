@@ -246,7 +246,7 @@ main() {
 			esac
 			;;
 		h) usage 0 ;;
-		s) silent=true;;
+		s) silent=true ;;
 		*) usage 1 ;;
 		esac
 	done
@@ -266,15 +266,17 @@ main() {
 			echo "build log: ${log_file}"
 		fi
 		(
-		cd "${builddir}" 
-		if [ "${silent}" == true ] && ! handle_build "${t}" &> "$log_file";then
-			error "Failed to build: $t, logs:"
-			cat "${log_file}"
-			exit 1
-		else 
-			handle_build "${t}"
-		fi
-		) 
+			cd "${builddir}"
+			if [ "${silent}" == true ]; then
+				if ! handle_build "${t}" &>"$log_file"; then
+					error "Failed to build: $t, logs:"
+					cat "${log_file}"
+					exit 1
+				fi
+			else
+				handle_build "${t}"
+			fi
+		)
 	done
 
 }
