@@ -1,3 +1,7 @@
+kata-tarball:
+	make all-parallel
+	make merge-builds
+
 all-parallel:
 	make all -j7
 
