@@ -17,3 +17,6 @@ rootfs-initrd:
 	./kata-deploy-binaries-in-docker.sh -s --build=$@
 shim-v2:
 	./kata-deploy-binaries-in-docker.sh -s --build=$@
+
+merge-builds:
+	./kata-deploy-merge-builds.sh build

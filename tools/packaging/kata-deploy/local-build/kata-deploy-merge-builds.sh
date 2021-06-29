@@ -17,7 +17,7 @@ tarball_content_dir="${PWD}/kata-tarball-content"
 rm -rf "${tarball_content_dir}"
 mkdir "${tarball_content_dir}"
 
-for c in "kata-static-*.tar.xz"
+for c in kata-static-*.tar.xz
 do
     echo "untarring tarball "${c}" into ${tarball_content_dir}"
     tar -xvf "${c}" -C "${tarball_content_dir}"
