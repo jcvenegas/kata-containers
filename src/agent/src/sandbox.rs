@@ -9,6 +9,7 @@ use crate::namespace::Namespace;
 use crate::netlink::Handle;
 use crate::network::Network;
 use crate::uevent::{Uevent, UeventMatcher};
+use crate::watcher::BindWatcher;
 use anyhow::{anyhow, Context, Result};
 use libc::pid_t;
 use oci::{Hook, Hooks};
@@ -54,6 +55,7 @@ pub struct Sandbox {
     pub hooks: Option<Hooks>,
     pub event_rx: Arc<Mutex<Receiver<String>>>,
     pub event_tx: Option<Sender<String>>,
+    pub bind_watcher: BindWatcher,
 }
 
 impl Sandbox {
@@ -85,6 +87,7 @@ impl Sandbox {
             hooks: None,
             event_rx,
             event_tx: Some(tx),
+            bind_watcher: BindWatcher::new(),
         })
     }
 
@@ -556,7 +559,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(unused_assignments)]
     async fn unset_and_remove_sandbox_storage() {
         skip_if_not_root!();
 
@@ -590,7 +592,7 @@ mod tests {
         assert_eq!(s.set_sandbox_storage(&destdir_path), true);
         assert!(s.unset_and_remove_sandbox_storage(&destdir_path).is_ok());
 
-        let mut other_dir_str = String::new();
+        let other_dir_str;
         {
             // Create another folder in a separate scope to ensure that is
             // deleted
