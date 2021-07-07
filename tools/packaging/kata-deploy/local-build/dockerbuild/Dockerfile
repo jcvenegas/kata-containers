@@ -33,9 +33,8 @@ RUN sh -c "echo '${IMG_USER} ALL=NOPASSWD: ALL' >> /etc/sudoers"
 
 RUN apt install -y git
 RUN apt install -y make
-
-# kata deps
-RUN apt install -y golang
+# TODO: agent is build out of container
+RUN apt install -y gcc
 
 ENV USER ${IMG_USER}
 USER ${UID}:${GID}
