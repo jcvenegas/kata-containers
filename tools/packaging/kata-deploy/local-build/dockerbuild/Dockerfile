@@ -31,15 +31,8 @@ ARG GID=1000
 RUN if [ ${IMG_USER} != "root" ]; then adduser ${IMG_USER} --uid=${UID};fi
 RUN sh -c "echo '${IMG_USER} ALL=NOPASSWD: ALL' >> /etc/sudoers"
 
-# kernel deps
-RUN apt install -y flex
-RUN apt install -y bison
-RUN apt install -y libelf-dev
-RUN apt install -y bc
-RUN apt install -y iptables
-RUN apt install -y build-essential
 RUN apt install -y git
-
+RUN apt install -y make
 
 # kata deps
 RUN apt install -y golang
