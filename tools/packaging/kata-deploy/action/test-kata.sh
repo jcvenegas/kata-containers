@@ -40,7 +40,7 @@ function waitForLabelRemoval() {
     echo "waiting for kata-runtime label to be removed"
     while [[ "$wait_time" -gt 0 ]]; do
         # if a node is found which matches node-select, the output will include a column for node name,
-        # NAME. Let's look for that 
+        # NAME. Let's look for that
         if [[ -z $(kubectl get nodes --selector katacontainers.io/kata-runtime 2>&1 | grep NAME) ]]
         then
             return 0
@@ -73,7 +73,7 @@ function run_test() {
 
       # in case the control plane is slow, give it a few seconds to accept the yaml, otherwise
       # our 'wait' for deployment status will fail to find the deployment at all
-      sleep 3 
+      sleep 3
 
       kubectl wait --timeout=5m --for=condition=Available deployment/${deployment}
       kubectl expose deployment/${deployment}
@@ -95,22 +95,9 @@ function run_test() {
 function test_kata() {
     set -x
 
-    [[ -z "$PKG_SHA" ]] && die "no PKG_SHA provided"
 
     YAMLPATH="./tools/packaging/kata-deploy/"
     VERSION=$(cat ./VERSION)
-
-    # This action could be called in two contexts:
-    #  1. Packaging workflows: testing in packaging repository, where we assume yaml/packaging
-    #   bits under test are already part of teh action workspace.
-    #  2. From kata-containers: when creating a release, the appropriate packaging repository is
-    #   not yet part of the workspace, and we will need to clone
-    if [[ ! -d $YAMLPATH ]]; then
-        [[ -d  $YAMLPATH ]] || git clone https://github.com/kata-containers/kata-containers
-        cd kata-containers
-        git fetch
-        git checkout $PKG_SHA
-    fi
 
     kubectl apply -f "$YAMLPATH/kata-rbac/base/kata-rbac.yaml"
 
@@ -120,8 +107,10 @@ function test_kata() {
     kubectl get runtimeclasses
 
     # update deployment daemonset to utilize the container under test:
-    sed -i "s#katadocker/kata-deploy:${VERSION}#katadocker/kata-deploy-ci:${PKG_SHA}#g" $YAMLPATH/kata-deploy/base/kata-deploy.yaml
-    sed -i "s#katadocker/kata-deploy:${VERSION}#katadocker/kata-deploy-ci:${PKG_SHA}#g" $YAMLPATH/kata-cleanup/base/kata-cleanup.yaml
+    # TODO:
+    # FIXME: use as argument my contiener from arguments
+    sed -i "s#katadocker/kata-deploy:${VERSION}#${CONTAINER_IMAGE}#g" $YAMLPATH/kata-deploy/base/kata-deploy.yaml
+    sed -i "s#katadocker/kata-deploy:${VERSION}#${CONTAINER_IMAGE}#g" $YAMLPATH/kata-cleanup/base/kata-cleanup.yaml
 
     cat $YAMLPATH/kata-deploy/base/kata-deploy.yaml
 
