@@ -10,12 +10,6 @@ jobs:
     strategy:
       matrix:
         asset:
-          - cloud-hypervisor
-          - firecracker
-          - kernel
-          - qemu
-          - rootfs-image
-          - rootfs-initrd
           - shim-v2
     steps:
       - uses: actions/checkout@v2
