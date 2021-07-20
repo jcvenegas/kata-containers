@@ -10,12 +10,6 @@ jobs:
     strategy:
       matrix:
         asset:
-          - cloud-hypervisor
-          - firecracker
-          - kernel
-          - qemu
-          - rootfs-image
-          - rootfs-initrd
           - shim-v2
     steps:
       - uses: actions/checkout@v2
@@ -69,10 +63,12 @@ jobs:
       CONTAINER_IMAGE_NAME: kata-deploy
     steps:
       - uses: actions/checkout@v2
+
       - name: get-kata-tarball
         uses: actions/download-artifact@v2
         with:
           name: kata-static-tarball
+
       - name: build-and-push-kata-deploy-ci
         id: build-and-push-kata-deploy-ci
         run: |
@@ -91,6 +87,11 @@ jobs:
           # FIXME: Not needed, can  just call directly the action
           mkdir -p packaging/kata-deploy
           ln -s $GITHUB_WORKSPACE/tools/packaging/kata-deploy/action packaging/kata-deploy/action
+
+      - name: debug
+        run: echo "DEBUG: output  ${container_image}"
+        env:
+          container_image: ${{ steps.build-and-push-kata-deploy-ci.outputs.CONTAINER_IMAGE }}
 
       - name: test-kata-deploy-ci-in-aks
         uses: ./packaging/kata-deploy/action
